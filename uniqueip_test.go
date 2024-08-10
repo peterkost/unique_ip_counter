@@ -1,13 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
 const SAMPLE_LINE_COUNT = 10
 
 func BenchmarkLineCount(b *testing.B) {
-	getUniqueAddresses("ip_addresses_sample_mini.txt")
+  fmt.Println("start bench")
+	getUniqueAddresses("input/ip_addresses_sample.txt")
 }
 
 func TestThreeUnique(t *testing.T) {

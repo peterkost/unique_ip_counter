@@ -16,3 +16,8 @@ When doing any sort of performance optimization it is essential to benchmark
 your results to ensure that what your optimizations are actually having the
 result you expect. I created a basic benchmark that uses 10% of the full input
 file (800 million lines). The resulting runtime is around 16 seconds.
+
+## Three - Naive solution with map
+
+This solution passed my test cases with ten ips, but our test file with 8MM
+lines timed out for taking more then eleven minutes in the benchmark.
