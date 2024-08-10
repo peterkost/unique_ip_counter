@@ -10,10 +10,10 @@ import (
 func main() {
   filePathPtr := flag.String("f", "", "Path to ip address file")
   flag.Parse()
-  getLineCount(*filePathPtr)
+  getUniqueAddresses(*filePathPtr)
 }
 
-func getLineCount(filePath string) int {
+func getUniqueAddresses(filePath string) int {
   readFile, err := os.Open(filePath)
 
   if err != nil {
@@ -23,12 +23,17 @@ func getLineCount(filePath string) int {
   fileScanner := bufio.NewScanner(readFile)
   fileScanner.Split(bufio.ScanLines)
 
-  lineCount := 0
+  addressCount := make(map[string]int)
   for fileScanner.Scan() {
-    lineCount++
+    addressCount[fileScanner.Text()] = addressCount[fileScanner.Text()] + 1
   }
-
   readFile.Close()
 
-  return lineCount
+  uniqueCount := 0
+  for _, count := range addressCount {
+    if count == 1 {
+      uniqueCount++
+    }
+  }
+  return  uniqueCount
 }
