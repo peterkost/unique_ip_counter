@@ -34,3 +34,14 @@ smallest type `bool` which only takes a single byte will provide us all of the
 information we need for a given IP address. We are also only working with IPv4
 addresses which is limited to a bit over 4 billion. Therfore to store all of the
 information we need in memory we will a bit over 4 GB.
+
+With this implemented my test file executed in around 97 seconds. I haven't
+implemented proper RAM benchmarking, but I only saw it go to around 8GB from
+just peaking at activity monitor. Big improvment over the naive solution.
+
+We are using a fixed boolean array of size 4294967296. This is a lot of wasted
+space if we are using a small input file, however the problem states that "the
+file is unlimited in size" so this is a tradeoff worth making. At this time I
+believe that this is the optimal space complexity for the problem.
+
+## Five - Optimizing file reading

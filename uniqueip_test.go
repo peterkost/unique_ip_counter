@@ -1,21 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"testing"
 )
 
-const SAMPLE_LINE_COUNT = 10
-
 func BenchmarkLineCount(b *testing.B) {
-  fmt.Println("start bench")
 	getUniqueAddresses("input/ip_addresses_sample.txt")
 }
 
-func TestThreeUnique(t *testing.T) {
-    result := getUniqueAddresses("input/three_unique.txt")
-    expected := 3
+func TestThreeDupes(t *testing.T) {
+    result := getUniqueAddresses("input/eight.txt")
+    expected := 8
 
     if result != expected {
         t.Errorf("Expected %d but got %d", expected, result)
@@ -23,8 +19,8 @@ func TestThreeUnique(t *testing.T) {
 }
 
 func TestAllUnique(t *testing.T) {
-    result := getUniqueAddresses("input/all_unique.txt")
-    expected := SAMPLE_LINE_COUNT
+    result := getUniqueAddresses("input/ten.txt")
+    expected := 10
 
     if result != expected {
         t.Errorf("Expected %d but got %d", expected, result)
@@ -32,8 +28,8 @@ func TestAllUnique(t *testing.T) {
 }
 
 func TestOneDupe(t *testing.T) {
-    result := getUniqueAddresses("input/one_dupe.txt")
-    expected := SAMPLE_LINE_COUNT - 1
+    result := getUniqueAddresses("input/ten_w_dupe.txt")
+    expected := 10
 
     if result != expected {
         t.Errorf("Expected %d but got %d", expected, result)
@@ -41,8 +37,8 @@ func TestOneDupe(t *testing.T) {
 }
 
 func TestAllSame(t *testing.T) {
-    result := getUniqueAddresses("input/all_same.txt")
-    expected :=  0
+    result := getUniqueAddresses("input/one.txt")
+    expected :=  1
 
     if result != expected {
         t.Errorf("Expected %d but got %d", expected, result)

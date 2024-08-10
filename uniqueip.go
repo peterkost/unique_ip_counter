@@ -25,19 +25,23 @@ func getUniqueAddresses(filePath string) int {
   fileScanner := bufio.NewScanner(readFile)
   fileScanner.Split(bufio.ScanLines)
 
-  addressCount := make(map[string]int)
+  var previouslySeen [4294967296]bool
+  total := 0
+  duplicates := 0
   for fileScanner.Scan() {
-    addressCount[fileScanner.Text()] = addressCount[fileScanner.Text()] + 1
+    ipAddress := fileScanner.Text()
+    ipIndex := getIpIndex(ipAddress)
+
+    if previouslySeen[ipIndex] {
+      duplicates++
+    }
+
+    previouslySeen[ipIndex] = true
+    total++
   }
   readFile.Close()
 
-  uniqueCount := 0
-  for _, count := range addressCount {
-    if count == 1 {
-      uniqueCount++
-    }
-  }
-  return  uniqueCount
+  return total - duplicates
 }
 
 func getIpIndex(ip string) uint32 {
