@@ -7,6 +7,10 @@ import (
 )
 
 func main() {
+  printLineCount()
+}
+
+func printLineCount() {
   filePath := os.Args[1]
   readFile, err := os.Open(filePath)
 
@@ -29,5 +33,3 @@ func main() {
 
   fmt.Println("total lines: ", lineCount)
 }
-
-
