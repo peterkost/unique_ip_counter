@@ -4,19 +4,21 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+  "flag"
 )
 
 func main() {
-  printLineCount()
+  filePathPtr := flag.String("f", "", "Path to ip address file")
+  flag.Parse()
+  getLineCount(*filePathPtr)
 }
 
-func printLineCount() {
-  filePath := os.Args[1]
+func getLineCount(filePath string) int {
   readFile, err := os.Open(filePath)
 
   if err != nil {
     fmt.Println(err)
-    return
+    return 0
   }
   fileScanner := bufio.NewScanner(readFile)
   fileScanner.Split(bufio.ScanLines)
@@ -24,12 +26,9 @@ func printLineCount() {
   lineCount := 0
   for fileScanner.Scan() {
     lineCount++
-    if lineCount % 100000000 == 0 {
-      fmt.Println(lineCount)
-    }
   }
 
   readFile.Close()
 
-  fmt.Println("total lines: ", lineCount)
+  return lineCount
 }
