@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
-  "flag"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -36,4 +38,16 @@ func getUniqueAddresses(filePath string) int {
     }
   }
   return  uniqueCount
+}
+
+func getIpIndex(ip string) uint32 {
+  ipParts := strings.Split(ip, ".")
+
+  a, _ := strconv.Atoi(ipParts[0])
+  b, _ := strconv.Atoi(ipParts[1])
+  c, _ := strconv.Atoi(ipParts[2])
+  d, _ := strconv.Atoi(ipParts[3])
+
+  return uint32(a*256*256*256 + b*256*256 + c*256 + d)
+
 }

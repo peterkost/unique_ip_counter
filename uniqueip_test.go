@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -42,6 +43,33 @@ func TestOneDupe(t *testing.T) {
 func TestAllSame(t *testing.T) {
     result := getUniqueAddresses("input/all_same.txt")
     expected :=  0
+
+    if result != expected {
+        t.Errorf("Expected %d but got %d", expected, result)
+    }
+}
+
+func TestFirstIpIndex(t *testing.T) {
+    result := getIpIndex("0.0.0.0")
+    expected :=  uint32(0)
+
+    if result != expected {
+        t.Errorf("Expected %d but got %d", expected, result)
+    }
+}
+
+func TestSecondIpIndex(t *testing.T) {
+    result := getIpIndex("0.0.0.1")
+    expected :=  uint32(1)
+
+    if result != expected {
+        t.Errorf("Expected %d but got %d", expected, result)
+    }
+}
+
+func TestLastIpIndex(t *testing.T) {
+    result := getIpIndex("255.255.255.255")
+    expected := uint32(math.MaxUint32)
 
     if result != expected {
         t.Errorf("Expected %d but got %d", expected, result)

@@ -20,4 +20,17 @@ file (800 million lines). The resulting runtime is around 16 seconds.
 ## Three - Naive solution with map
 
 This solution passed my test cases with ten ips, but our test file with 8MM
-lines timed out for taking more then eleven minutes in the benchmark.
+lines timed out for taking more then eleven minutes in the benchmark. I'm
+guessing this has something to do with Mac OS's memory managment. At one point I
+saw the benchmark using over 25GB of RAM. I only have 16GB so I'm assuming it
+writes some of it to disk and then when we try to access it the OS need's to
+move it back into memory.
+
+## Four - Use array instead of map
+
+Currently each IP uses a string and an int in memory. This wastes a lot of
+memory since all we care about for each IP is if we've seen it before. Go's
+smallest type `bool` which only takes a single byte will provide us all of the
+information we need for a given IP address. We are also only working with IPv4
+addresses which is limited to a bit over 4 billion. Therfore to store all of the
+information we need in memory we will a bit over 4 GB.
