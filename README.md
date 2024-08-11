@@ -57,3 +57,20 @@ optimization I was able to get the runtime of our sample file from 97 seconds to
 Going off of the last optimization I figured I might as well just read the file
 byte by byte instaead of line by line to avoid multiple reads of the same line.
 This optimization got me down to 44 seconds.
+
+## Seven - Adding concurrency
+
+I had heard that Go makes concurrency really easy and now I finally get to try
+it. Full disclosure, my implementation was inspired by Pereria's article
+mentioned above. Before impelmenting concurrency I was keeping track of the
+total number of IPs and the number of IPs I had already seen. With concurrency
+my use of an array would create race conditions. To avoid this I opted to simply
+set each IP to seen and at the end loop over the array once and tally up number
+of seen IPs. This caused my unit tests to go from around a second to seven,
+since the sample size was only ten IPs. However as mentioned with the memory
+usage, my implementation is aiming for handling an unlimited number of IPs as
+stated in the problem in which case the tradeoff of this loop is well worth the
+speed increase of concurency. With this implemented the runtime of my sample
+file went from 44 seconds to around 19 seconds, but note that now my test cases
+are responsible for about 7 of those so the gains on the actual input file are
+quite substantial.

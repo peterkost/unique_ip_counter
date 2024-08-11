@@ -1,13 +1,18 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"flag"
-	"fmt"
 	"io"
+	"math"
 	"os"
+	"sync"
 )
+
+const BUFFER_SIZE = 2048 * 2048
+const NUM_WORKERS = 10
+const CHANNEL_BUFFER = 10
+
+var seenIps = make([]bool, math.MaxUint32)
 
 func main() {
 	filePathPtr := flag.String("f", "", "Path to ip address file")
@@ -15,59 +20,108 @@ func main() {
 	getUniqueAddresses(*filePathPtr)
 }
 
+func consumer(input chan []byte, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	var ip [4]uint32
+	for ipBytes := range input {
+		ipIndex := 0
+
+		for _, b := range ipBytes {
+			if b >= 48 && b <= 57 {
+				ip[ipIndex] *= 10
+				ip[ipIndex] += uint32(b - '0')
+			} else if b == '.' {
+				ipIndex++
+			} else if b == '\n' {
+				seenIpIndex := getIpIndex(ip)
+				seenIps[seenIpIndex] = true
+
+				ipIndex = 0
+				ip = [4]uint32{}
+			}
+
+		}
+	}
+
+	var emptyArray [4]uint32
+	if ip != emptyArray {
+		seenIpIndex := getIpIndex(ip)
+		seenIps[seenIpIndex] = true
+	}
+}
+
 func getUniqueAddresses(filePath string) int {
-	f, err := os.Open(filePath)
+	seenIps = make([]bool, math.MaxUint32)
+
+	inputChannels := make([]chan []byte, NUM_WORKERS)
+
+	var wg sync.WaitGroup
+	wg.Add(NUM_WORKERS)
+
+	for i := 0; i < NUM_WORKERS; i++ {
+		input := make(chan []byte, CHANNEL_BUFFER)
+
+		go consumer(input, &wg)
+
+		inputChannels[i] = input
+	}
+
+	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 
-	br := bufio.NewReader(f)
-
-	var previouslySeen [4294967296]bool
-	total := 0
-	duplicates := 0
-
-	var ip [4]uint32
-	ipIndex := 0
-
+	readBuffer := make([]byte, BUFFER_SIZE)
+	leftoverBuffer := make([]byte, 1024)
+	leftoverSize := 0
+	currentWorker := 0
 	for {
-		b, err := br.ReadByte()
-
-		if err != nil && !errors.Is(err, io.EOF) {
-			fmt.Println(err)
+		numReadBytes, err := file.Read(readBuffer)
+		if err == io.EOF {
 			break
-		}
-
-		if b >= 48 && b <= 57 {
-			ip[ipIndex] *= 10
-			ip[ipIndex] += uint32(b - '0')
-		} else if b == '.' {
-			ipIndex++
-		} else if b == '\n' {
-
-			seenIpIndex := getIpIndex(ip)
-
-			if previouslySeen[seenIpIndex] {
-				duplicates++
-			} else {
-				previouslySeen[seenIpIndex] = true
-			}
-
-			total++
-
-			ipIndex = 0
-			ip = [4]uint32{}
 		}
 
 		if err != nil {
-			break
+			panic(err)
+		}
+
+		lastNewLineIndex := 0
+		for i := numReadBytes - 1; i >= 0; i-- {
+			if readBuffer[i] == 10 {
+				lastNewLineIndex = i
+				break
+			}
+		}
+
+		data := make([]byte, lastNewLineIndex+leftoverSize)
+		copy(data, leftoverBuffer[:leftoverSize])
+		copy(data[leftoverSize:], readBuffer[:lastNewLineIndex])
+		copy(leftoverBuffer, readBuffer[lastNewLineIndex+1:numReadBytes])
+		leftoverSize = numReadBytes - lastNewLineIndex - 1
+
+		inputChannels[currentWorker] <- data
+
+		currentWorker++
+		if currentWorker >= NUM_WORKERS {
+			currentWorker = 0
 		}
 	}
 
-	f.Close()
+	for i := 0; i < NUM_WORKERS; i++ {
+		close(inputChannels[i])
+	}
 
-	return total - duplicates
+	wg.Wait()
 
+	uniqueIps := 0
+	for _, seen := range seenIps {
+		if seen {
+			uniqueIps++
+		}
+	}
+	return uniqueIps
 }
 
 func getIpIndex(ip [4]uint32) uint32 {
