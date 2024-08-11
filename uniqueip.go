@@ -11,8 +11,8 @@ import (
 )
 
 const BUFFER_SIZE = 2048 * 2048
-const NUM_WORKERS = 10
-const CHANNEL_BUFFER = 10
+const NUM_WORKERS = 25
+const CHANNEL_BUFFER = 25
 
 var seenIps = make([]bool, math.MaxUint32)
 
