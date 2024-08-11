@@ -1,5 +1,7 @@
 # Project Specific
 input/ip_addresses_sample.txt
+input/ip_addresses
+test.go
 
 
 # If you prefer the allow list template instead of the deny list, see community template:
