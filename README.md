@@ -1,8 +1,8 @@
-# Lightspeed Take Home Assessment
+# Reading 8 Billion Lines in Go - From 13 minutes to 58 seconds
 
-https://github.com/Ecwid/new-job/blob/master/IP-Addr-Counter-GO.md
+This is my solution to the take home assessment for a SWE role at Lightspeed. The problem statement can be found in [this file](IP-Addr-Counter-GO.md) or in [their repo](https://github.com/Ecwid/new-job/blob/master/IP-Addr-Counter-GO.md).
 
-# Summary
+## Summary
 
 Time complexity: O(n)
 Space complexity: O(1)
@@ -10,87 +10,46 @@ Space complexity: O(1)
 Runtime on M1 MacBook Pro with 16 GB of RAM is about 60 seconds.
 Number of unique IPs in the test file 1,000,020,936 (1 billion).
 
-# Dev Log
+## Execution
 
-## One - Scanning the input to count the number of lines
+```bash
+go run uniqueip.go -f ip_addresses
+```
 
-The first challenege to takle is reading in the massive input file. With a naive
-file scanner it took about thirteen minutes for the script to count up the number of
-lines. The result was eight billion.
+## Dev Log
 
-## Two - Adding Benchmarking
+### 01 - Scanning the input to count the number of lines
 
-When doing any sort of performance optimization it is essential to benchmark
-your results to ensure that what your optimizations are actually having the
-result you expect. I created a basic benchmark that uses 10% of the full input
-file (800 million lines). The resulting runtime is around 16 seconds.
+The first challenge is efficiently reading the massive input file. Initially, using a naive file scanner, it took about thirteen minutes for the script to count the number of lines, which totalled eight billion.
 
-## Three - Naive solution with map
+### 02 - Adding Benchmarking
 
-This solution passed my test cases with ten ips, but our test file with 8MM
-lines timed out for taking more then eleven minutes in the benchmark. I'm
-guessing this has something to do with Mac OS's memory managment. At one point I
-saw the benchmark using over 25GB of RAM. I only have 16GB so I'm assuming it
-writes some of it to disk and then when we try to access it the OS need's to
-move it back into memory.
+When performing any kind of optimization, it's essential to benchmark your results to ensure that your changes are actually having the desired effect. I created a basic benchmark using 10% of the full input file (800 million lines), which resulted in a runtime of around 16 seconds. The runtime was further improved by running the benchmark file from my internal SSD.
 
-## Four - Use array instead of map
+### 03 - Naive solution with map
 
-Currently each IP uses a string and an int in memory. This wastes a lot of
-memory since all we care about for each IP is if we've seen it before. Go's
-smallest type `bool` which only takes a single byte will provide us all of the
-information we need for a given IP address. We are also only working with IPv4
-addresses which is limited to a bit over 4 billion. Therfore to store all of the
-information we need in memory we will a bit over 4 GB.
+This solution passed my test cases with ten IPs, but when I ran the test file with 8 million lines, it timed out after taking more than eleven minutes in the benchmark. I suspect this issue is related to macOS's memory management. At one point, I noticed the benchmark using over 25GB of RAM. Since my machine only has 16GB of RAM, I assume the OS is writing some of the data to disk, and when we try to access it, the OS needs to move it back into memory.
 
-With this implemented my test file executed in around 97 seconds. I haven't
-implemented proper RAM benchmarking, but I only saw it go to around 8GB from
-just peaking at activity monitor. Big improvment over the naive solution.
+### 04 - Use array instead of map
 
-We are using a fixed boolean array of size 4294967296. This is a lot of wasted
-space if we are using a small input file, however the problem states that "the
-file is unlimited in size" so this is a tradeoff worth making. At this time I
-believe that this is the optimal space complexity for the problem.
+Currently, each IP address is stored as a string and an integer in memory, which is wasteful since all we need to know is whether we've seen the IP before. Go's smallest type, bool, which takes only a single byte, provides all the information we need for each IP address. Since we're only working with IPv4 addresses, which are limited to just over 4 billion, we can store all the necessary information in memory using a bit over 4GB.
 
-## Five - Bytes instead of Strings
+After implementing this change, my test file executed in around 97 seconds. Although I haven't set up proper RAM benchmarking, I observed the memory usage peaking at around 8GB according to the Activity Monitor—a significant improvement over the naive solution.
 
-To get an idea of optimizations I can implement I had a read through Renato Pereira's
-[article on his solution to the billion row challenge](https://r2p.dev/b/2024-03-18-1brc-go/).
-I learned that using bytes instead of strings greatly improves the performance of the file scanner.
-This seemed like a good first step since we want ints instead of strings anyways. With this single
-optimization I was able to get the runtime of our sample file from 97 seconds to 54.
+We are using a fixed boolean array of size 4,294,967,296. This approach does result in some wasted space for smaller input files, but since the problem statement mentions that "the file is unlimited in size," this tradeoff is justified. At this point, I believe this is the optimal space complexity for the problem.
 
-## Six - Scan file by bytes instead of lines
+### 05 - Bytes instead of Strings
 
-Going off of the last optimization I figured I might as well just read the file
-byte by byte instaead of line by line to avoid multiple reads of the same line.
-This optimization got me down to 44 seconds.
+To explore potential optimizations, I read through Renato Pereira's [article on his solution to the billion row challenge](https://r2p.dev/b/2024-03-18-1brc-go/). I learned that using bytes instead of strings significantly improves the performance of the file scanner. This seemed like a good first step, especially since we ultimately want integers rather than strings. By applying this single optimization, I was able to reduce the runtime of our sample file from 97 seconds to 54 seconds.
 
-## Seven - Adding concurrency
+### 06 - Scan file by bytes instead of lines
 
-I had heard that Go makes concurrency really easy and now I finally get to try
-it. Full disclosure, my implementation was inspired by Pereria's article
-mentioned above. Before impelmenting concurrency I was keeping track of the
-total number of IPs and the number of IPs I had already seen. With concurrency
-my use of an array would create race conditions. To avoid this I opted to simply
-set each IP to seen and at the end loop over the array once and tally up number
-of seen IPs. This caused my unit tests to go from around a second to seven,
-since the sample size was only ten IPs. However as mentioned with the memory
-usage, my implementation is aiming for handling an unlimited number of IPs as
-stated in the problem in which case the tradeoff of this loop is well worth the
-speed increase of concurency. With this implemented the runtime of my sample
-file went from 44 seconds to around 19 seconds, but note that now my test cases
-are responsible for about 7 of those so the gains on the actual input file are
-quite substantial.
+Building on the previous optimization, I decided to read the file byte by byte instead of line by line to avoid multiple reads of the same line. This further reduced the runtime to 44 seconds.
 
-I ran the full file and got a runtime of a bit over six minutes, but I think the
-bottle neck here is the IO. I'm running the full file off a USB SSD and the 10%
-file off the internal SSD. THe 10% file runs in 14 seconds so six minutes is
-quite a bit more. Should take about half that, but I don't have the storage to
-test the full file off of the internal.
+### 07 - Adding concurrency
 
-## Eight - Final results and thoughts
+I had heard that Go makes concurrency really easy, and now I finally had the chance to try it. Full disclosure: my implementation was inspired by Pereira's article mentioned earlier. Before implementing concurrency, I was keeping track of the total number of IPs and the number of IPs I had already seen. However, using an array in a concurrent environment would create race conditions. To avoid this, I opted to simply mark each IP as "seen" and then loop over the array once at the end to tally up the number of seen IPs.
 
-I decided to transfer the file over to my internal SSD and got a runtime of
-around 60 seconds. That seems like a respectable time so I'll leave the
-optimization there.
+This change caused my unit tests to slow down from around one second to seven seconds, as the sample size was only ten IPs. However, since my implementation is designed to handle an unlimited number of IPs, as stated in the problem, the tradeoff of this additional loop is well worth the speed increase from concurrency. After implementing concurrency, the runtime of my sample file dropped from 44 seconds to around 19 seconds. Note that about 7 of those seconds are now due to the test cases, so the actual gains on the input file are quite substantial.
+
+Running the full file from the internal SSD I got a runtime of around 60 seconds!
