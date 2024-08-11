@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"math"
 	"os"
 	"sync"
+	"time"
 )
 
 const BUFFER_SIZE = 2048 * 2048
@@ -15,9 +17,12 @@ const CHANNEL_BUFFER = 10
 var seenIps = make([]bool, math.MaxUint32)
 
 func main() {
+  started := time.Now()
 	filePathPtr := flag.String("f", "", "Path to ip address file")
 	flag.Parse()
-	getUniqueAddresses(*filePathPtr)
+  res := getUniqueAddresses(*filePathPtr)
+  fmt.Println("Unique IPs: ", res)
+	fmt.Printf("%0.6f\n", time.Since(started).Seconds())
 }
 
 func consumer(input chan []byte, wg *sync.WaitGroup) {

@@ -74,3 +74,9 @@ speed increase of concurency. With this implemented the runtime of my sample
 file went from 44 seconds to around 19 seconds, but note that now my test cases
 are responsible for about 7 of those so the gains on the actual input file are
 quite substantial.
+
+I ran the full file and got a runtime of a bit over six minutes, but I think the
+bottle neck here is the IO. I'm running the full file off a USB SSD and the 10%
+file off the internal SSD. THe 10% file runs in 14 seconds so six minutes is
+quite a bit more. Should take about half that, but I don't have the storage to
+test the full file off of the internal.
