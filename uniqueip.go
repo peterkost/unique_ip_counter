@@ -29,7 +29,7 @@ func main() {
 }
 
 func getUniqueIpCount(filePath string) int {
-	seenIps = make([]bool, math.MaxUint32)
+	seenIps = make([]bool, math.MaxUint32 + 1)
 
 	inputChannels := make([]chan []byte, NUM_WORKERS)
 
