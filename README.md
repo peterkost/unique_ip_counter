@@ -2,6 +2,14 @@
 
 https://github.com/Ecwid/new-job/blob/master/IP-Addr-Counter-GO.md
 
+# Summary
+
+Time complexity: O(n)
+Space complexity: O(1)
+
+Runtime on M1 MacBook Pro with 16 GB of RAM is about 60 seconds.
+Number of unique IPs in the test file 1,000,020,936 (1 billion).
+
 # Dev Log
 
 ## One - Scanning the input to count the number of lines
@@ -80,3 +88,9 @@ bottle neck here is the IO. I'm running the full file off a USB SSD and the 10%
 file off the internal SSD. THe 10% file runs in 14 seconds so six minutes is
 quite a bit more. Should take about half that, but I don't have the storage to
 test the full file off of the internal.
+
+## Eight - Final results and thoughts
+
+I decided to transfer the file over to my internal SSD and got a runtime of
+around 60 seconds. That seems like a respectable time so I'll leave the
+optimization there.
