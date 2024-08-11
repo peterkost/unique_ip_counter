@@ -5,9 +5,11 @@ This is my solution to the take home assessment for a SWE role at Lightspeed. Th
 ## Summary
 
 Time complexity: O(n)
+
 Space complexity: O(1)
 
 Runtime on M1 MacBook Pro with 16 GB of RAM is about 60 seconds.
+
 Number of unique IPs in the test file 1,000,020,936 (1 billion).
 
 ## Execution
