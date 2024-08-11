@@ -44,4 +44,6 @@ space if we are using a small input file, however the problem states that "the
 file is unlimited in size" so this is a tradeoff worth making. At this time I
 believe that this is the optimal space complexity for the problem.
 
-## Five - Optimizing file reading
+## Five - Bytes instead of Strings
+
+To get an idea of optimizations I can implement I had a read through Renato Pereira's [article on his solution to the billion row challenge](https://r2p.dev/b/2024-03-18-1brc-go/). I learned that using bytes instead of strings greatly improves the performance of the file scanner. This seemed like a good first step since we want ints instead of strings anyways. With this single optimization I was able to get the runtime of our sample file from 97 seconds to 54.
