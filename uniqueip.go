@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
-	"bytes"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -15,56 +16,60 @@ func main() {
 }
 
 func getUniqueAddresses(filePath string) int {
-	readFile, err := os.Open(filePath)
-
+	f, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println(err)
-		return 0
+		panic(err)
 	}
-	fileScanner := bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
+
+	br := bufio.NewReader(f)
 
 	var previouslySeen [4294967296]bool
 	total := 0
 	duplicates := 0
-	for fileScanner.Scan() {
-		ipAddress := fileScanner.Bytes()
-		ipIndex := getIpIndex(ipAddress)
 
-		if previouslySeen[ipIndex] {
-			duplicates++
+	var ip [4]uint32
+	ipIndex := 0
+
+	for {
+		b, err := br.ReadByte()
+
+		if err != nil && !errors.Is(err, io.EOF) {
+			fmt.Println(err)
+			break
 		}
 
-		previouslySeen[ipIndex] = true
-		total++
+		if b >= 48 && b <= 57 {
+			ip[ipIndex] *= 10
+			ip[ipIndex] += uint32(b - '0')
+		} else if b == '.' {
+			ipIndex++
+		} else if b == '\n' {
+
+			seenIpIndex := getIpIndex(ip)
+
+			if previouslySeen[seenIpIndex] {
+				duplicates++
+			} else {
+				previouslySeen[seenIpIndex] = true
+			}
+
+			total++
+
+			ipIndex = 0
+			ip = [4]uint32{}
+		}
+
+		if err != nil {
+			break
+		}
 	}
-	readFile.Close()
+
+	f.Close()
 
 	return total - duplicates
-}
-
-func bytesToInt(ipChunk []byte) uint32 {
-	var res uint32 = 0
-	for _, ascii := range ipChunk {
-		res *= 10
-		res += uint32(ascii - '0')
-	}
-	return res
-}
-
-func getIpIndex(ip []byte) uint32 {
-	firstPeriod := bytes.IndexByte(ip, byte('.'))
-	firstNumber := bytesToInt(ip[:firstPeriod])
-
-	secondPeriod := bytes.IndexByte(ip[firstPeriod+1:], byte('.')) + firstPeriod + 1
-	secondNumber := bytesToInt(ip[firstPeriod+1 : secondPeriod])
-
-	thirdPeriod := bytes.IndexByte(ip[secondPeriod+1:], byte('.')) + secondPeriod + 1
-	thirdNumber := bytesToInt(ip[secondPeriod+1 : thirdPeriod])
-
-	fourthNumber := bytesToInt(ip[thirdPeriod+1:])
-
-	return firstNumber*256*256*256 + secondNumber*256*256 + thirdNumber*256 + fourthNumber
 
 }
 
+func getIpIndex(ip [4]uint32) uint32 {
+	return ip[0]*256*256*256 + ip[1]*256*256 + ip[2]*256 + ip[3]
+}

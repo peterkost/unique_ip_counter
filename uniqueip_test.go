@@ -46,7 +46,7 @@ func TestAllSame(t *testing.T) {
 }
 
 func TestFirstIpIndex(t *testing.T) {
-	result := getIpIndex([]byte("0.0.0.0"))
+	result := getIpIndex([4]uint32{0, 0, 0, 0})
 	expected := uint32(0)
 
 	if result != expected {
@@ -55,7 +55,7 @@ func TestFirstIpIndex(t *testing.T) {
 }
 
 func TestSecondIpIndex(t *testing.T) {
-	result := getIpIndex([]byte("0.0.0.1"))
+	result := getIpIndex([4]uint32{0, 0, 0, 1})
 	expected := uint32(1)
 
 	if result != expected {
@@ -64,7 +64,7 @@ func TestSecondIpIndex(t *testing.T) {
 }
 
 func TestLastIpIndex(t *testing.T) {
-	result := getIpIndex([]byte("255.255.255.255"))
+	result := getIpIndex([4]uint32{255, 255, 255, 255})
 	expected := uint32(math.MaxUint32)
 
 	if result != expected {

@@ -46,4 +46,14 @@ believe that this is the optimal space complexity for the problem.
 
 ## Five - Bytes instead of Strings
 
-To get an idea of optimizations I can implement I had a read through Renato Pereira's [article on his solution to the billion row challenge](https://r2p.dev/b/2024-03-18-1brc-go/). I learned that using bytes instead of strings greatly improves the performance of the file scanner. This seemed like a good first step since we want ints instead of strings anyways. With this single optimization I was able to get the runtime of our sample file from 97 seconds to 54.
+To get an idea of optimizations I can implement I had a read through Renato Pereira's
+[article on his solution to the billion row challenge](https://r2p.dev/b/2024-03-18-1brc-go/).
+I learned that using bytes instead of strings greatly improves the performance of the file scanner.
+This seemed like a good first step since we want ints instead of strings anyways. With this single
+optimization I was able to get the runtime of our sample file from 97 seconds to 54.
+
+## Six - Scan file by bytes instead of lines
+
+Going off of the last optimization I figured I might as well just read the file
+byte by byte instaead of line by line to avoid multiple reads of the same line.
+This optimization got me down to 44 seconds.
