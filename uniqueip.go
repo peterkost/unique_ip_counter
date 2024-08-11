@@ -12,51 +12,23 @@ import (
 
 const BUFFER_SIZE = 2048 * 2048
 const NUM_WORKERS = 25
-const CHANNEL_BUFFER = 25
+const CHANNEL_BUFFERS = 25
 
-var seenIps = make([]bool, math.MaxUint32)
+var seenIps []bool
 
 func main() {
-  started := time.Now()
+	started := time.Now()
+
 	filePathPtr := flag.String("f", "", "Path to ip address file")
 	flag.Parse()
-  res := getUniqueAddresses(*filePathPtr)
-  fmt.Println("Unique IPs: ", res)
+
+	uniqueIps := getUniqueIpCount(*filePathPtr)
+
+	fmt.Println("Unique IPs: ", uniqueIps)
 	fmt.Printf("%0.6f\n", time.Since(started).Seconds())
 }
 
-func consumer(input chan []byte, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	var ip [4]uint32
-	for ipBytes := range input {
-		ipIndex := 0
-
-		for _, b := range ipBytes {
-			if b >= 48 && b <= 57 {
-				ip[ipIndex] *= 10
-				ip[ipIndex] += uint32(b - '0')
-			} else if b == '.' {
-				ipIndex++
-			} else if b == '\n' {
-				seenIpIndex := getIpIndex(ip)
-				seenIps[seenIpIndex] = true
-
-				ipIndex = 0
-				ip = [4]uint32{}
-			}
-
-		}
-	}
-
-	var emptyArray [4]uint32
-	if ip != emptyArray {
-		seenIpIndex := getIpIndex(ip)
-		seenIps[seenIpIndex] = true
-	}
-}
-
-func getUniqueAddresses(filePath string) int {
+func getUniqueIpCount(filePath string) int {
 	seenIps = make([]bool, math.MaxUint32)
 
 	inputChannels := make([]chan []byte, NUM_WORKERS)
@@ -65,9 +37,9 @@ func getUniqueAddresses(filePath string) int {
 	wg.Add(NUM_WORKERS)
 
 	for i := 0; i < NUM_WORKERS; i++ {
-		input := make(chan []byte, CHANNEL_BUFFER)
+		input := make(chan []byte, CHANNEL_BUFFERS)
 
-		go consumer(input, &wg)
+		go markIpsSeenInChunk(input, &wg)
 
 		inputChannels[i] = input
 	}
@@ -127,6 +99,37 @@ func getUniqueAddresses(filePath string) int {
 		}
 	}
 	return uniqueIps
+}
+
+func markIpsSeenInChunk(chunk chan []byte, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	var ipOctets [4]uint32
+	var octetIndex int
+
+	for bytes := range chunk {
+		octetIndex = 0
+		for _, b := range bytes {
+			if b >= 48 && b <= 57 {
+				ipOctets[octetIndex] *= 10
+				ipOctets[octetIndex] += uint32(b - '0')
+			} else if b == '.' {
+				octetIndex++
+			} else if b == '\n' {
+				seenIpIndex := getIpIndex(ipOctets)
+				seenIps[seenIpIndex] = true
+
+				octetIndex = 0
+				ipOctets = [4]uint32{}
+			}
+		}
+	}
+
+	// edge case where file doesn't end with new line
+	if octetIndex != 0 {
+		seenIpIndex := getIpIndex(ipOctets)
+		seenIps[seenIpIndex] = true
+	}
 }
 
 func getIpIndex(ip [4]uint32) uint32 {

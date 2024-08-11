@@ -6,11 +6,11 @@ import (
 )
 
 func BenchmarkLineCount(b *testing.B) {
-	getUniqueAddresses("input/ip_addresses_sample.txt")
+	getUniqueIpCount("input/ip_addresses_sample.txt")
 }
 
 func TestThreeDupes(t *testing.T) {
-	result := getUniqueAddresses("input/eight.txt")
+	result := getUniqueIpCount("input/eight.txt")
 	expected := 8
 
 	if result != expected {
@@ -19,7 +19,7 @@ func TestThreeDupes(t *testing.T) {
 }
 
 func TestAllUnique(t *testing.T) {
-	result := getUniqueAddresses("input/ten.txt")
+	result := getUniqueIpCount("input/ten.txt")
 	expected := 10
 
 	if result != expected {
@@ -28,7 +28,7 @@ func TestAllUnique(t *testing.T) {
 }
 
 func TestOneDupe(t *testing.T) {
-	result := getUniqueAddresses("input/ten_w_dupe.txt")
+	result := getUniqueIpCount("input/ten_w_dupe.txt")
 	expected := 10
 
 	if result != expected {
@@ -37,7 +37,7 @@ func TestOneDupe(t *testing.T) {
 }
 
 func TestAllSame(t *testing.T) {
-	result := getUniqueAddresses("input/one.txt")
+	result := getUniqueIpCount("input/one.txt")
 	expected := 1
 
 	if result != expected {
