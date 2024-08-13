@@ -10,7 +10,7 @@ Space complexity: O(1)
 
 Runtime on M1 MacBook Pro with 16 GB of RAM is about 60 seconds.
 
-Number of unique IPs in the test file 1,000,020,936 (1 billion).
+Number of unique IPs in the test file 1,000,000,000 (1 billion).
 
 ## Execution
 
@@ -54,4 +54,11 @@ I had heard that Go makes concurrency really easy, and now I finally had the cha
 
 This change caused my unit tests to slow down from around one second to seven seconds, as the sample size was only ten IPs. However, since my implementation is designed to handle an unlimited number of IPs, as stated in the problem, the tradeoff of this additional loop is well worth the speed increase from concurrency. After implementing concurrency, the runtime of my sample file dropped from 44 seconds to around 19 seconds. Note that about 7 of those seconds are now due to the test cases, so the actual gains on the input file are quite substantial.
 
-Running the full file from the internal SSD I got a runtime of around 60 seconds!
+Running the full file from the internal SSD I got a runtime of around 60 seconds
+
+### 08 - Unexpected behaviour
+
+Upon further testing it seems like there is unexpected bahaviour from accessing
+the same array from multiple threads. The answer is actually an even 1 billion I
+think, but due to me accessing using one array I am getting unexpected
+behaviour.
