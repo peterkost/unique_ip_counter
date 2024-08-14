@@ -1,20 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"math"
 	"os"
-	"sync"
 	"time"
 )
-
-const BUFFER_SIZE = 2048 * 2048
-const NUM_WORKERS = 25
-const CHANNEL_BUFFERS = 25
-
-var seenIps []bool
 
 func main() {
 	started := time.Now()
@@ -29,107 +24,57 @@ func main() {
 }
 
 func getUniqueIpCount(filePath string) int {
-	seenIps = make([]bool, math.MaxUint32 + 1)
-
-	inputChannels := make([]chan []byte, NUM_WORKERS)
-
-	var wg sync.WaitGroup
-	wg.Add(NUM_WORKERS)
-
-	for i := 0; i < NUM_WORKERS; i++ {
-		input := make(chan []byte, CHANNEL_BUFFERS)
-
-		go markIpsSeenInChunk(input, &wg)
-
-		inputChannels[i] = input
-	}
-
 	file, err := os.Open(filePath)
+	defer file.Close()
+
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
 
-	readBuffer := make([]byte, BUFFER_SIZE)
-	leftoverBuffer := make([]byte, 1024)
-	leftoverSize := 0
-	currentWorker := 0
+	br := bufio.NewReader(file)
+
+	seenIps := make([]bool, math.MaxUint32+1)
+	total := 0
+	duplicates := 0
+
+	var ip [4]uint32
+	ipIndex := 0
+
 	for {
-		numReadBytes, err := file.Read(readBuffer)
-		if err == io.EOF {
+		currentByte, err := br.ReadByte()
+
+		if err != nil && !errors.Is(err, io.EOF) {
+			fmt.Println(err)
 			break
 		}
 
-		if err != nil {
-			panic(err)
-		}
+		if currentByte >= 48 && currentByte <= 57 {
+			ip[ipIndex] *= 10
+			ip[ipIndex] += uint32(currentByte - '0')
+		} else if currentByte == '.' {
+			ipIndex++
+		} else if currentByte == '\n' {
 
-		lastNewLineIndex := 0
-		for i := numReadBytes - 1; i >= 0; i-- {
-			if readBuffer[i] == 10 {
-				lastNewLineIndex = i
-				break
-			}
-		}
+			seenIpIndex := getIpIndex(ip)
 
-		data := make([]byte, lastNewLineIndex+leftoverSize)
-		copy(data, leftoverBuffer[:leftoverSize])
-		copy(data[leftoverSize:], readBuffer[:lastNewLineIndex])
-		copy(leftoverBuffer, readBuffer[lastNewLineIndex+1:numReadBytes])
-		leftoverSize = numReadBytes - lastNewLineIndex - 1
-
-		inputChannels[currentWorker] <- data
-
-		currentWorker++
-		if currentWorker >= NUM_WORKERS {
-			currentWorker = 0
-		}
-	}
-
-	for i := 0; i < NUM_WORKERS; i++ {
-		close(inputChannels[i])
-	}
-
-	wg.Wait()
-
-	uniqueIps := 0
-	for _, seen := range seenIps {
-		if seen {
-			uniqueIps++
-		}
-	}
-	return uniqueIps
-}
-
-func markIpsSeenInChunk(chunk chan []byte, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	var ipOctets [4]uint32
-	var octetIndex int
-
-	for bytes := range chunk {
-		octetIndex = 0
-		for _, b := range bytes {
-			if b >= 48 && b <= 57 {
-				ipOctets[octetIndex] *= 10
-				ipOctets[octetIndex] += uint32(b - '0')
-			} else if b == '.' {
-				octetIndex++
-			} else if b == '\n' {
-				seenIpIndex := getIpIndex(ipOctets)
+			if seenIps[seenIpIndex] {
+				duplicates++
+			} else {
 				seenIps[seenIpIndex] = true
-
-				octetIndex = 0
-				ipOctets = [4]uint32{}
 			}
+
+			total++
+
+			ipIndex = 0
+			ip = [4]uint32{}
+		}
+
+		if err != nil {
+			break
 		}
 	}
 
-	// edge case where file doesn't end with new line
-	if octetIndex != 0 {
-		seenIpIndex := getIpIndex(ipOctets)
-		seenIps[seenIpIndex] = true
-	}
+	return total - duplicates
 }
 
 func getIpIndex(ip [4]uint32) uint32 {

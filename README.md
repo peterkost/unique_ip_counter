@@ -1,4 +1,4 @@
-# Reading 8 Billion Lines in Go - From 13 minutes to 58 seconds
+# Reading 8 Billion Lines in Go: From 13 Minutes to 1, Then Back to 7
 
 This is my solution to the take home assessment for a SWE role at Lightspeed. The problem statement can be found in [this file](IP-Addr-Counter-GO.md) or in [their repo](https://github.com/Ecwid/new-job/blob/master/IP-Addr-Counter-GO.md).
 
@@ -8,7 +8,7 @@ Time complexity: O(n)
 
 Space complexity: O(1)
 
-Runtime on M1 MacBook Pro with 16 GB of RAM is about 60 seconds.
+Runtime on M1 MacBook Pro with 16 GB of RAM is about 7.5 minutes.
 
 Number of unique IPs in the test file 1,000,000,000 (1 billion).
 
@@ -58,7 +58,12 @@ Running the full file from the internal SSD I got a runtime of around 60 seconds
 
 ### 08 - Unexpected behaviour
 
-Upon further testing it seems like there is unexpected bahaviour from accessing
-the same array from multiple threads. The answer is actually an even 1 billion I
-think, but due to me accessing using one array I am getting unexpected
-behaviour.
+Upon further testing, it seems there is unexpected behaviour when accessing the same array from multiple threads. The expected result should be an even 1 billion, but due to concurrent access to a single array, I'm encountering inconsistencies.
+
+### 09 - Scrapping concurrency
+
+My issue was caused by writing to the same array from multiple channels. I had incorrectly assumed that since I was only ever setting the booleans to true, it wouldn’t matter if two channels tried to write to the same element simultaneously. However, this caused unexpected behaviour, which forced me to rethink my approach.
+
+My first thought was to give each channel its own array and then merge the results. However, this wasn’t feasible due to memory constraints—each channel would use 4 GB of RAM, which is too large of a tradeoff. I explored alternative ways to store the results, which led me to realize that I should have used a bit set instead of a boolean array. This change would reduce memory usage from 4 GB to 512 MB—a significant improvement, but still too much for each channel. As a result, I decided to revert to a non-concurrent approach.
+
+I tried implementing the bit set idea, but it caused massive performance losses. The runtime increased by more than 10x, which didn’t make sense given the expected efficiency. I also tried using [this package](https://pkg.go.dev/github.com/willf/bitset), which provides exactly what I needed, but again, the performance was abysmal. This package is also thread-safe, so I tested it with my concurrent approach, but the performance penalty of thread safety negated the benefits of concurrency.
